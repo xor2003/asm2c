@@ -16,7 +16,7 @@ if argCount>2 {
         
         var fileNameHeap = sourcePath.replace(target: ".asm", withString: ".heap", option: .caseInsensitive)
         
-        let heapFileName = asmFileName.replace(target: ".asm", withString: ".heap", option: .caseInsensitive)
+//        let heapFileName = asmFileName.replace(target: ".asm", withString: ".heap", option: .caseInsensitive)
         
         let fileNameOutputNoMacros=sourcePath.replace(target: asmFileName, withString: "\(asmFileNameNoExtension)/\(asmFileNameNoExtension).nomacro", option: .caseInsensitive)
         

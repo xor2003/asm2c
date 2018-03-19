@@ -209,6 +209,16 @@ typedef union registry16Bits
 		memmove(dest,src,a*ecx); m.edi.dd.val+=a*ecx; m.esi.dd.val+=a*ecx; \
 	}
 
+#define CMPS(a,ecx) \ // TODO test
+	for(i=0; i<ecx; i++) {  \
+			src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
+			AFFECT_ZF( (*dest-*src) ); m.edi.dd.val+=a; m.esi.dd.val+=a; } \
+			if (m.ZF) break; \
+	}
+
+#define REP_CMPS(b) CMPS(b,m.ecx.dd.val)
+#define REP_CMPSB REP_CMPS(1)
+
 #define MOVSB MOVS(1,1)
 #define MOVSW MOVS(2,1)
 #define MOVSD MOVS(4,1)
@@ -296,6 +306,9 @@ int8_t asm2C_IN(int16_t data);
 	}
 
 #define RET POP(x,jmpbuffer); longjmp(jmpbuffer, 0);
+
+#define RETN RET //TODO test
+#define RETF RET
 
 #ifdef __LIBSDL2__
 #include <SDL2/SDL.h>

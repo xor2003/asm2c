@@ -19,6 +19,7 @@ public enum Token {
     case Instruction0(String)
     case Instruction1(String)
     case Instruction2(String)
+    case Instruction3(String)
     case JumpInstruction(String)
     case Number(Int)
     case Operator(String)
@@ -46,7 +47,7 @@ var lineNumber = 1
 
 let tokenList: [(String, TokenGenerator, Int)] = [
     ("\r|;.*|\\..*|assume .*|_TEXT .*", { _ in lineNumber = lineNumber + 1 ; return nil } , 0),
-    (" |\t|ptr|near|short", { _ in nil }, 0), //note: ignoring CLD/STD instructions
+    (" |\t|ptr|near|far|short", { _ in nil }, 0), //note: ignoring CLD/STD instructions
     ("Offset", { _ in .Offset } , 0),
     ("db|dw|dd", { .DataSymbol($0) } ,0),
     ("dup", { _ in .Dup } ,0),
@@ -54,7 +55,7 @@ let tokenList: [(String, TokenGenerator, Int)] = [
     ("proc", { _ in .Proc } ,0),
     ("endp", { _ in .Endp } ,0),
     ("equ", { _ in .Equ } ,0),
-    ("ret|iret", { _ in .Ret }, 0),
+    ("retn|retf|ret|iret", { _ in .Ret }, 0),
     ("call", { _ in .Call }, 0),
     ("byte|word|dword", { .Qualifier($0) }, 0),
     ("eax|ebx|ecx|edx|esi|edi|ebp|esp", { .Register($0) }, 0),
@@ -62,10 +63,11 @@ let tokenList: [(String, TokenGenerator, Int)] = [
     ("cs|ds|es|fs|gs|ss", { .Register16($0) }, 0),
     ("ah|bh|ch|dh", { .Register8h($0) }, 0),
     ("al|bl|cl|dl", { .Register8l($0) }, 0),
-    ("movsb|movsw|movsd|lodsb|lodsw|lodsd|stosb|stosw|stosd|rep|std|cld|sti|pushf|popf|nop|popad|pushad", { .Instruction0($0) }, 0),
-    ("dec|inc|pop|push|int|neg", { .Instruction1($0) }, 0),
-    ("je|jne|jmp|jnz|jna|jz|loop|ja|jbe|jnbe|jb|jc|jnae|js|jns|jnb|jae|jnc", { .JumpInstruction($0) }, 0),
-    ("cmp|movsx|movzx|mov|or|xor|and|add|rol|ror|sub|shl|shr|test|in|out|lea", { .Instruction2($0) }, 0),
+    ("cmpsb|cmpsw|cmpsd|movsb|movsw|movsd|xlat|lodsb|lodsw|lodsd|stosb|stosw|stosd|aad|rep|repe|std|stc|cld|clc|cli|cbw|cwde|cwd|sti|cmc|pushf|popf|nop|pushad|popad|popa|pusha", { .Instruction0($0) }, 0),
+    ("dec|inc|pop|push|int|neg|div|idiv|mul|imul|setb|setnz|not", { .Instruction1($0) }, 0),
+    ("je|jne|jmp|jnz|jna|jz|loop|loope|ja|jbe|jnbe|jb|jc|jnae|js|jns|jnb|jae|jnc|jge|jg|jle|jl|jcxz", { .JumpInstruction($0) }, 0),
+    ("xchg|cmp|movsx|movzx|mov|or|xor|and|add|adc|sbb|rol|ror|sub|shl|shr|test|in|out|lea|lds|les|lfs|lgs|sar|bt|bts|btc", { .Instruction2($0) }, 0),
+    ("imul|shrd", { .Instruction3($0) }, 0),
     ("\\+|\\*|-|/", { .Operator($0) }, 0),
     ("\'.\'", { (r: String) in
         let index = r.index(r.startIndex, offsetBy: 1)
