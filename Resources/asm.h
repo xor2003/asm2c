@@ -23,7 +23,11 @@ extern "C" {
 #define INLINE
 #endif
 
+#if defined(_REAL_MODE)
+#define realAddress(offset,segment) ((db *)&m+(dd)offset + 0x10*m.segment.dw.val)
+#else
 #define realAddress(offset,segment) ((db *)&m+(dd)offset+m.selectors[m.segment.dw.val])
+#endif
 
 #define db uint8_t
 #define dw uint16_t
@@ -140,6 +144,8 @@ typedef union registry16Bits
 #define ROR(nbBits,a,nbBitsSrc,b) a=(a>>b | a<<(nbBits-b))
 #define ROL(nbBits,a,nbBitsSrc,b) a=(a<<b | a>>(nbBits-b))
 
+#define SAR(nbBits,a,nbBitsSrc,b) a= ((long)a) / (1 << b)  // TODO
+
 #define READDDp(a) ((dd *) &m.a)
 #define READDWp(a) ((dw *) &m.a)
 #define READDBp(a) ((db *) &m.a)
@@ -162,12 +168,23 @@ typedef union registry16Bits
 #define READDBh(a) (*((db *) &m.a.dbh.val))
 #define READDBl(a) (*((db *) &m.a.dbl.val))
 
+#define AAD m.eax.dbl.val = m.eax.dbl.val + (m.eax.dbh.val * 10) & 0xFF; m.eax.dbh.val = 0; //TODO
+
 #define ADD(nbBits,a,nbBitsSrc,b) a=a+b; AFFECT_ZF(a); AFFECT_CF(a<b); AFFECT_SF(nbBits,a);
 #define SUB(nbBits,a,nbBitsSrc,b) a=a-b; AFFECT_ZF(a); AFFECT_CF(b<a); AFFECT_SF(nbBits,a);
+
+#define ADC(nbBits,a,nbBitsSrc,b) ADD(nbBits,a,nbBitsSrc,b); a += m.CF //TODO
+#define SBB(nbBits,a,nbBitsSrc,b) SUB(nbBits,a,nbBitsSrc,b); a -= m.CF
 
 // TODO: should affects OF, SF, ZF, AF, and PF
 #define INC(nbBits,a) a=a+1; AFFECT_ZF(a)
 #define DEC(nbBits,a) a=a-1; AFFECT_ZF(a)
+
+#define NOT(nbBits,a) a= ~a;// AFFECT_ZF(a) //TODO
+#define SETNZ(nbBits,a) a= (!m.ZF)&1; //TODO
+#define SETZ(nbBits,a) a= (m.ZF)&1; //TODO
+#define SETB(nbBits,a) a= (m.CF)&1; //TODO
+
 
 #define JE(label) if (m.ZF) GOTOLABEL(label)
 #define JZ(label) JE(label)
@@ -178,6 +195,16 @@ typedef union registry16Bits
 #define JNB(label) if (!m.CF) GOTOLABEL(label)
 #define JAE(label) JNB(label)
 #define JNC(label) JNB(label)
+
+#define JGE(label) if (m.ZF || !m.SF) GOTOLABEL(label) // TODO
+#define JG(label) if (!m.ZF && !m.SF) GOTOLABEL(label) // TODO
+
+#define JLE(label) if (m.ZF || m.SF) GOTOLABEL(label) // TODO
+#define JL(label) if (!m.ZF && m.SF) GOTOLABEL(label) // TODO
+
+#define JCXZ(label) if (m.cx.dw.val == 0) GOTOLABEL(label) // TODO
+#define JNCXZ(label) if (m.cx.dw.val != 0) GOTOLABEL(label) // TODO
+
 
 #define JB(label) if (m.CF) GOTOLABEL(label)
 #define JC(label) JB(label)
@@ -193,11 +220,20 @@ typedef union registry16Bits
 #define JBE(label) JNA(label)
 
 #define MOV(nbBits,dest,nbBitsSrc,src) dest = src
+
+#define MOV(nbBits,dest,nbBitsSrc,src) dest = src
 #define MOVZX(nbBits,dest,nbBitsSrc,src) dest = src
 #define MOVSX(nbBits,dest,nbBitsSrc,src) if (ISNEGATIVE(nbBitsSrc,src)) { dest = ((-1 ^ (( 1 <<nbBitsSrc )-1)) | src ); } else { dest = src; }
 
+#define BT(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src) //TODO
+#define BTS(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src); dest |= 1 << src
+#define BTC(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src); dest ^= (1 << src)
+#define BTR(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src); dest &= ~(1 << src)
+
 // LEA - Load Effective Address
 #define LEA(nbBits,dest,nbBitsSrc,src) dest = src
+
+#define XCHG(nbBits,dest,nbBitsSrc,src) dd tmp = dest; dest = src; src = tmp //TODO
 
 // MOVSx (DF FLAG not implemented)
 #define MOVS(a,ecx) src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
@@ -213,11 +249,14 @@ typedef union registry16Bits
 	for(i=0; i<ecx; i++) {  \
 			src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
 			AFFECT_ZF( (*dest-*src) ); m.edi.dd.val+=a; m.esi.dd.val+=a; } \
-			if (m.ZF) break; \
+			if (!m.ZF) break; \
 	}
 
 #define REP_CMPS(b) CMPS(b,m.ecx.dd.val)
 #define REP_CMPSB REP_CMPS(1)
+#define CBW m.eax.dbh.val = m.eax.dbl.val >> 7 // TODO
+#define CWD m.edx.dw.val = m.eax.dw.val >> 15
+#define CWDE m.eax.dw.v0 = m.eax.dw.val >> 15
 
 #define MOVSB MOVS(1,1)
 #define MOVSW MOVS(2,1)
@@ -273,9 +312,13 @@ typedef union registry16Bits
 #define GOTOLABEL(a) goto a
 
 #define LOOP(label) DEC(32,m.ecx.dd.val); JNZ(label)
+#define LOOPE(label) --m.ecx.dd.val; if (m.ecx.dd.val!=0 && m.ZF) GOTOLABEL(label) //TODO
 
 #define CLD m.DF=0
 #define STD m.DF=1
+
+#define CLC m.CF=0 //TODO
+#define CMC m.CF= ~m.CF //TODO
 
 void stackDump();
 void hexDump (void *addr, int len);
@@ -295,6 +338,7 @@ int8_t asm2C_IN(int16_t data);
 #define IN(a,b) a = asm2C_IN(b); TESTJUMPTOBACKGROUND
 
 #define STI // TODO: STI not implemented
+#define CLI // TODO: STI not implemented
 #define PUSHF
 #define POPF
 #define NOP
