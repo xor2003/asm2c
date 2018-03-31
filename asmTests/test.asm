@@ -29,6 +29,76 @@ test bh,02h
 jnz failure
 jb failure
 
+mov eax,0
+inc eax
+dec eax
+setnz al
+cmp eax,0
+jnz failure
+
+mov eax,0
+mov ebx,0
+inc eax
+setnz bh
+cmp ebx,100h
+jnz failure
+
+mov eax,0
+inc eax
+dec eax
+setz al
+cmp eax,1
+jnz failure
+
+mov eax,0
+mov ebx,0
+inc eax
+setz bh
+cmp ebx,0
+jnz failure
+
+clc
+mov eax,0
+setb al
+cmp eax,0
+jnz failure
+
+stc
+mov eax,0
+setb al
+cmp eax,1
+jnz failure
+
+mov eax,0100b
+bt eax,2
+jnc failure
+bt eax,0
+jc failure
+
+mov eax,0100b
+btc eax,2
+jnc failure
+btc eax,0
+jc failure
+cmp eax,1
+jne failure
+
+mov eax,0100b
+btr eax,2
+jnc failure
+btr eax,0
+jc failure
+cmp eax,0
+jne failure
+
+mov eax,0100b
+bts eax,2
+jnc failure
+bts eax,0
+jc failure
+cmp eax,0101b
+jne failure
+
 MOV al,0
 JMP exitLabel
 failure:

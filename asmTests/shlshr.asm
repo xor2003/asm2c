@@ -36,6 +36,21 @@ SHL ch,2
 cmp ch,011111100B
 jne failure
 
+mov eax,4
+sar eax,1
+cmp eax,2
+jne failure
+
+mov eax,-4
+sar eax,1
+cmp eax,-2
+jne failure
+
+mov eax,-8
+sar eax,2
+cmp eax,-2
+jne failure
+
 MOV al,0
 JMP exitLabel
 failure:

@@ -19,6 +19,114 @@ xor ebx,ebx
 neg ebx
 jc failure
 
+mov eax,011111111111111111111111111111111b
+not eax
+cmp eax,0
+jne failure
+
+mov eax,0
+mov ax,01111111111111111b
+not ax
+cmp eax,0
+jne failure
+
+mov eax,0
+mov ax,01010101010101010b
+not ax
+cmp eax,0101010101010101b
+jne failure
+;;;;;;
+mov eax,0
+cbw
+cmp eax,0                
+jne failure
+
+mov eax,-5
+cbw
+cmp eax,-5                
+jne failure
+
+mov eax,0
+mov al,-5
+cbw
+cmp ax,-5                
+jne failure
+
+mov eax,0ffffff03h
+cbw
+cmp eax,0ffff0003h
+jne failure
+
+mov eax,0ffff00f3h
+cbw
+cmp eax,0fffffff3h
+jne failure
+;;;;;;
+mov eax,0
+mov edx,0
+cwd
+cmp eax,0                
+jne failure
+cmp edx,0                
+jne failure
+
+mov eax,-5
+mov edx,0
+cwd
+cmp eax,-5
+jne failure
+cmp edx,0ffffh
+jne failure
+
+mov eax,0ffffff03h
+mov edx,0
+cwd
+cmp eax,0ffffff03h
+jne failure
+cmp edx,0ffffh
+jne failure
+
+mov eax,0ffff00f3h
+mov edx,0
+cwd
+cmp eax,0ffff00f3h
+jne failure
+cmp edx,0
+jne failure
+;;;;;
+mov eax,0
+cwde
+cmp eax,0                
+jne failure
+
+mov eax,-5
+cwde
+cmp eax,-5                
+jne failure
+
+mov eax,0ffffff03h
+cwde
+cmp eax,0ffffff03h
+jne failure
+
+mov eax,0ffff00f3h
+cwde
+cmp eax,000f3h
+jne failure
+;;;;;;
+
+clc
+jc failure
+
+stc
+jnc failure
+
+clc
+cmc
+jnc failure
+cmc
+jc failure
+
 xor eax,eax
 JMP exitLabel
 failure:

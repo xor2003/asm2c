@@ -7,6 +7,9 @@ var2 dw 4,6,9
 var3 dd 11,-11,2,4
 var4 db 100 dup (1)
 testOVerlap db 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+str1 db 'abcde'
+str2 db 'abcde'
+str3 db 'cdeab'
 
 T EQU 4
 
@@ -58,6 +61,17 @@ jne failure
 ;cmp cl,6
 ;jne failure
 
+mov esi,offset str1
+mov edi,offset str2
+mov ecx,5
+repe cmpsb
+jnz failure
+
+mov esi,offset str1
+mov edi,offset str3
+mov ecx,5
+repe cmpsb
+jz failure
 
 finTest:
 mov esi,offset testOVerlap

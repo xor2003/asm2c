@@ -112,6 +112,14 @@ mov ebx,g
 cmp ebx,12345
 jne failure
 
+mov eax,1
+mov ebx,2
+xchg eax,ebx
+cmp eax,2
+jne failure
+cmp ebx,1
+jne failure
+
 MOV al,0
 JMP exitLabel
 failure:

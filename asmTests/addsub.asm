@@ -31,6 +31,30 @@ mov ebx,2
 sub ebx,eax
 JA failure
 
+stc
+mov eax,3
+sbb eax,1
+cmp eax,1
+JNE failure
+
+clc
+mov eax,3
+sbb eax,1
+cmp eax,2
+JNE failure
+
+stc
+mov eax,3
+adc eax,1
+cmp eax,5
+JNE failure
+
+clc
+mov eax,3
+adc eax,1
+cmp eax,4
+JNE failure
+
 mov eax,2
 mov ebx,3
 sub ebx,eax
@@ -61,6 +85,16 @@ jne failure
 
 xor edi,edi
 add edi,14*320
+
+mov ax,505h
+aad
+cmp ax,55
+jne failure
+
+mov ax,304h
+aad
+cmp ax,34
+jne failure
 
 MOV al,0
 JMP exitLabel

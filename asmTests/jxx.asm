@@ -64,7 +64,74 @@ mov byte ptr [esi],-2
 cmp byte ptr [esi],1
 jb failure  ; // because unsigned comparaison
 
+mov dx,-1
+cmp dx,0
+jg failure
 
+mov dx,5
+cmp dx,5
+jg failure
+
+mov eax,5
+cmp eax,4
+jg @df@@@@1
+jmp failure
+@df@@@@1:
+
+mov eax,4
+cmp eax,4
+jge @df@@@@2
+jmp failure
+@df@@@@2:
+
+mov eax,5
+cmp eax,4
+jge @df@@@@3
+jmp failure
+@df@@@@3:
+
+mov dx,-1
+cmp dx,0
+jge failure
+
+;;;;;
+mov dx,0
+cmp dx,-1
+jl failure
+
+mov dx,5
+cmp dx,5
+jl failure
+
+mov eax,4
+cmp eax,5
+jl @df@@@@4
+jmp failure
+@df@@@@4:
+
+mov eax,4
+cmp eax,4
+jle @df@@@@5
+jmp failure
+@df@@@@5:
+
+mov eax,4
+cmp eax,5
+jle @df@@@@6
+jmp failure
+@df@@@@6:
+
+mov dx,0
+cmp dx,-1
+jle failure
+
+mov cx,-1
+jcxz failure
+
+mov cx,0
+jcxz @df@@@@7
+jmp failure
+@df@@@@7:
 
 MOV al,0
 JMP exitLabel

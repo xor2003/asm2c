@@ -203,7 +203,7 @@ typedef union registry16Bits
 #define JL(label) if (!m.ZF && m.SF) GOTOLABEL(label) // TODO
 
 #define JCXZ(label) if (m.cx.dw.val == 0) GOTOLABEL(label) // TODO
-#define JNCXZ(label) if (m.cx.dw.val != 0) GOTOLABEL(label) // TODO
+//#define JNCXZ(label) if (m.cx.dw.val != 0) GOTOLABEL(label) // TODO
 
 
 #define JB(label) if (m.CF) GOTOLABEL(label)
@@ -317,6 +317,7 @@ typedef union registry16Bits
 #define CLD m.DF=0
 #define STD m.DF=1
 
+#define STC m.CF=1 //TODO
 #define CLC m.CF=0 //TODO
 #define CMC m.CF= ~m.CF //TODO
 
