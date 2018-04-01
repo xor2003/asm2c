@@ -320,6 +320,47 @@ public struct Instruction2Node: CustomStringConvertible {
     }
 }
 
+public struct Instruction3Node: CustomStringConvertible {
+    public let instruction: String
+    public let sizeDirectiveSource: SizeDirective
+    public let sizeDirectiveDest: SizeDirective
+    public let selector: String
+    public let lhs: ExprNode
+    public let rhs: ExprNode
+    public let number: ExprNode
+    public var description: String  {
+        
+        var castLhs = "\(lhs)"
+        var castRhs = "\(rhs)"
+        var castNumber = "\(number)"
+        
+        // special cases
+        if instruction == "IN" || instruction == "OUT" {
+            return "\(instruction)(\(castLhs),\(castRhs));\n"
+        }
+        
+        if shouldPointExpression(expr: lhs) {
+           castLhs = "*((\(sizeDirectiveDest) *) realAddress(\(lhs), \(selector)))"
+        }
+        switch (rhs) {
+        case is BraquetNode:
+            castRhs = "*((\(sizeDirectiveSource) *) realAddress(\(rhs), \(selector)))"
+        case is OffsetNode:
+            castRhs = "(\(rhs))"
+            if let lhs = lhs as? RegisterNode {
+                castLhs = "m.\(lhs.value).dd.val"
+            }
+        default:
+            if shouldPointExpression(expr: rhs) {
+                castRhs = "*((\(sizeDirectiveDest) *) realAddress(\(rhs), \(selector)))"
+            } else {
+                castRhs = "(\(sizeDirectiveSource))\(rhs)"
+            }
+        }
+        return "R(\(instruction)(\(sizeDirectiveDest.nbBits),\(castLhs),\(sizeDirectiveSource.nbBits),\(castRhs),\(castNumber)));\n"
+    }
+}
+
 public struct BraquetNode: ExprNode {
     public let expr: ExprNode
     public var description: String {

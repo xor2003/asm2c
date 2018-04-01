@@ -27,11 +27,12 @@ L0$pb:
 	mov	byte ptr [esi + (_m-L0$pb)+4], 127
 	mov	dword ptr [esi + (_m-L0$pb)+8], -1
 	mov	byte ptr [esi + (_m-L0$pb)+9], -4
-	mov	dword ptr [esi + _m-L0$pb], -2
-	mov	byte ptr [esi + (_m-L0$pb)+45], 1
+	mov	dword ptr [esi + (_m-L0$pb)+12], -1412567177
+	mov	dword ptr [esi + _m-L0$pb], -1424870314
+	mov	byte ptr [esi + (_m-L0$pb)+45], 0
 	mov	byte ptr [esi + (_m-L0$pb)+44], 0
 	mov	byte ptr [esi + (_m-L0$pb)+47], 0
-	mov	word ptr [esi + _m-L0$pb], 19456
+	mov	word ptr [esi + _m-L0$pb], 19457
 	sub	esp, 12
 	push	33
 	call	_asm2C_INT
@@ -100,7 +101,7 @@ LBB0_5:
 	lea	ecx, [esi + L_.str-L0$pb]
 	lea	edx, [esi + L___func__.program-L0$pb]
 	push	eax
-	push	79
+	push	86
 	push	ecx
 	push	edx
 	call	___assert_rtn

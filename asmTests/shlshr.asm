@@ -51,6 +51,15 @@ sar eax,2
 cmp eax,-2
 jne failure
 
+mov edx,0abcdef77h
+mov eax,012345678h
+shrd eax, edx, 8
+cmp eax,077123456h
+jne failure
+cmp edx,0abcdef77h
+jne failure
+
+
 MOV al,0
 JMP exitLabel
 failure:

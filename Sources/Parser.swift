@@ -524,6 +524,11 @@ class Parser {
                 throw Errors.ExpectedInstruction
             }
             return Instruction0Node(instruction: "REPE_\(instructionRep)")
+        } else if (instruction.uppercased()=="REPNE") {
+            guard case let .Instruction0(instructionRep) = popCurrentToken() else {
+                throw Errors.ExpectedInstruction
+            }
+            return Instruction0Node(instruction: "REPNE_\(instructionRep)")
         } else if (instruction.uppercased()=="REP") {
             guard case let .Instruction0(instructionRep) = popCurrentToken() else {
                 throw Errors.ExpectedInstruction
@@ -615,6 +620,69 @@ class Parser {
         return Instruction2Node(instruction: instruction.uppercased(), sizeDirectiveSource: currentSizeDirectiveSource, sizeDirectiveDest: currentSizeDirectiveDest, selector: currentSelector, lhs: lhs, rhs: rhs)
     }
 
+    func parseInstruction3() throws -> Instruction3Node {
+        guard case let Token.Instruction3(instruction) = popCurrentToken() else {
+            throw Errors.ExpectedInstruction
+        }
+        var currentSizeDirectiveDest = getCurrentSizeDirective()
+        var currentSizeDirectiveSource: SizeDirective = .unknown
+
+        guard let lhs = try parseExpression() else {
+            throw Errors.ExpectedExpression
+        }
+
+        if currentSizeDirectiveDest == .unknown {
+            let currentSizeDirectiveFromExpr: SizeDirective = try getCurrentSizeFrom(expr: lhs)
+            currentSizeDirectiveDest = currentSizeDirectiveFromExpr
+        }
+
+        guard case Token.Comma = popCurrentToken() else {
+            throw Errors.UnexpectedToken
+        }
+
+        currentSizeDirectiveSource = getCurrentSizeDirective()
+
+        if currentSizeDirectiveDest == .unknown {
+            currentSizeDirectiveDest=currentSizeDirectiveSource
+        }
+        
+        guard var rhs = try parseExpression() else {
+            throw Errors.ExpectedExpression
+        }
+
+        if instruction.uppercased() == "LEA" {
+            rhs = OffsetNode(expr: rhs)
+        }
+        
+        if let rhs = rhs as? RegisterNode  {
+            currentSizeDirectiveSource = rhs.size
+        }
+
+        if (currentSizeDirectiveSource == .unknown) {
+            currentSizeDirectiveSource = currentSizeDirectiveDest
+        }
+        if (currentSizeDirectiveDest == .unknown) {
+            currentSizeDirectiveDest = currentSizeDirectiveSource
+        }
+
+        if (isInstructionWithDifferentSizeForSourceAndDestination(instruction: instruction) == true) {
+            if (currentSizeDirectiveDest == currentSizeDirectiveSource) {
+                print("Warning:\(instruction) dest and source size marked as egals, please fix your asm code with a byte ptr or word ptr thing???\n")
+                // TOFIX: Test on DOSBOX if should fail
+            }
+        }
+
+        guard case Token.Comma = popCurrentToken() else {
+            throw Errors.UnexpectedToken
+        }
+
+        guard var number = try parseExpression() else {
+            throw Errors.ExpectedExpression
+        }
+
+        return Instruction3Node(instruction: instruction.uppercased(), sizeDirectiveSource: currentSizeDirectiveSource, sizeDirectiveDest: currentSizeDirectiveDest, selector: currentSelector, lhs: lhs, rhs: rhs, number: number)
+    }
+
 
     func parseLine() throws -> Any {
         self.currentSelector = defaultSelector
@@ -625,6 +693,8 @@ class Parser {
             return try parseInstruction1()
         case .Instruction2:
             return try parseInstruction2()
+        case .Instruction3:
+            return try parseInstruction3()
         case .JumpInstruction:
             return try parseJumpInstruction()
         case .Label:

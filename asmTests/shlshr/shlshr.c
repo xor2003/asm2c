@@ -70,6 +70,13 @@ R(MOV(32,READDD(eax),32,(dd)((0-8))));
 R(SAR(32,READDD(eax),32,(dd)2));
 R(CMP(32,READDD(eax),32,(dd)((0-2))));
 R(JNE(failure));
+R(MOV(32,READDD(edx),32,(dd)2882400119));
+R(MOV(32,READDD(eax),32,(dd)305419896));
+R(SHRD(32,READDD(eax),32,(dd)READDD(edx),8));
+R(CMP(32,READDD(eax),32,(dd)1997681750));
+R(JNE(failure));
+R(CMP(32,READDD(edx),32,(dd)2882400119));
+R(JNE(failure));
 R(MOV(8,READDBl(eax),8,(db)0));
 R(JMP(exitlabel));
 failure:

@@ -144,6 +144,8 @@ typedef union registry16Bits
 #define ROR(nbBits,a,nbBitsSrc,b) a=(a>>b | a<<(nbBits-b))
 #define ROL(nbBits,a,nbBitsSrc,b) a=(a<<b | a>>(nbBits-b))
 
+#define SHRD(nbBits,a,nbBitsSrc,b,c) a=(a>>c) | ( (b& ((1<<c)-1) ) << (nbBits-c) ) //TODO
+
 #define SAR(nbBits,a,nbBitsSrc,b) a=(( (a & (1 << (nbBits-1)))?-1:0)<<(nbBits-(0x1f & b))) | (a >> (0x1f & b))  // TODO
 
 #define READDDp(a) ((dd *) &m.a)
