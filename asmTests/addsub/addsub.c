@@ -4,103 +4,130 @@
 #pragma GCC diagnostic ignored "-Wunused-label"
 
 Memory m = {
-	{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
-	0,0,0,0,0,0, //flags
-	0, //isLittle
-	0, //exitCode
-	{2,5,6}, //var1
-	{4,6,9}, //var2
-	{11,((0-11)),2,4}, //var3
-	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, //var4
-	{0}, //var5
-	{0}, //dummy1
+{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
+0,0,0,0,0,0, //flags
+0, //isLittle
+0, //exitCode
+{2,5,6}, //var1
+{4,6,9}, //var2
+{11,((0-11)),2,4}, //var3
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, //var4
+{0}, //var5
+{0}, //dummy1
 
-	{0}, //vgaPalette
-	1,{0}, //selectorsPointer+selectors
-	0,{0}, //stackPointer+stack
-	0, //heapPointer
-	{0}, //heap
-	{0},{0},{0}, NULL
-};
+{0}, //vgaPalette
+1,{0}, //selectorsPointer+selectors
+0,{0}, //stackPointer+stack
+0, //heapPointer
+{0}, //heap
+{0},{0},{0}, NULL};
 
 int program() {
-	jmp_buf jmpbuffer;
-	void * dest;
-	void * src;
-	int i;
+jmp_buf jmpbuffer;
+void * dest;
+void * src;
+int i;
 #ifdef INCLUDEMAIN
-	dest=NULL; src=NULL; i=0; //to avoid a warning.
+dest=NULL;src=NULL;i=0; //to avoid a warning.
 #endif
-	if (m.executionFinished) goto moveToBackGround;
-	if (m.jumpToBackGround) {
-		m.jumpToBackGround = 0;
+if (m.executionFinished) goto moveToBackGround;
+if (m.jumpToBackGround) {
+m.jumpToBackGround = 0;
 #ifdef MRBOOM
-		if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
-		if (m.nosetjmp==2) goto directjeu;
-		if (m.nosetjmp==1) goto directmenu;
+if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
+if (m.nosetjmp==2) goto directjeu;
+if (m.nosetjmp==1) goto directmenu;
 #endif
-		RET;
-	}
-	R(ADD(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)50));
-	R(CMP(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)50));
-	R(JNE(failure));
-	R(SUB(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)25));
-	R(CMP(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)25));
-	R(JNE(failure));
-	R(CMP(16,*((dw *) realAddress(offsetof(struct Mem,var5), ds)),16,(dw)0));
-	R(JNE(failure));
-	R(MOV(32,READDD(eax),32,(dd)3));
-	R(MOV(32,READDD(ebx),32,(dd)2));
-	R(SUB(32,READDD(ebx),32,(dd)READDD(eax)));
-	R(JA(failure));
-	R(MOV(32,READDD(eax),32,(dd)2));
-	R(MOV(32,READDD(ebx),32,(dd)3));
-	R(SUB(32,READDD(ebx),32,(dd)READDD(eax)));
-	R(JB(failure));
-	R(CMP(32,READDD(ebx),32,(dd)1));
-	R(JNE(failure));
-	R(CMP(32,READDD(ebx),32,(dd)2));
-	R(JA(failure));
-	R(CMP(32,READDD(ebx),32,(dd)0));
-	R(JB(failure));
-	R(CMP(32,READDD(ebx),32,(dd)1));
-	R(JB(failure));
-	R(JA(failure));
-	R(MOV(32,READDD(eax),32,(dd)(((0-1))-((((0-2))+3)))));
-	R(CMP(32,READDD(eax),32,(dd)((0-2))));
-	R(JNE(failure));
-	R(MOV(32,READDD(ebx),32,(dd)2));
-	R(CMP(32,READDD(eax),32,(dd)READDD(ebx)));
-	R(JB(failure));
-	R(MOV(8,READDBl(edx),8,(db)99));
-	R(SUB(8,READDBl(edx),8,(db)97));
-	R(CMP(8,READDBl(edx),8,(db)2));
-	R(JNE(failure));
-	R(XOR(32,READDD(edi),32,(dd)READDD(edi)));
-	R(ADD(32,READDD(edi),32,(dd)(14*320)));
-	R(MOV(8,READDBl(eax),8,(db)0));
-	R(JMP(exitlabel));
+RET;
+}
+R(ADD(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)50));
+R(CMP(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)50));
+R(JNE(failure));
+R(SUB(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)25));
+R(CMP(16,*((dw *) realAddress((offsetof(struct Mem,var5)+2), ds)),16,(dw)25));
+R(JNE(failure));
+R(CMP(16,*((dw *) realAddress(offsetof(struct Mem,var5), ds)),16,(dw)0));
+R(JNE(failure));
+R(MOV(32,READDD(eax),32,(dd)3));
+R(MOV(32,READDD(ebx),32,(dd)2));
+R(SUB(32,READDD(ebx),32,(dd)READDD(eax)));
+R(JA(failure));
+R(STC);
+R(MOV(32,READDD(eax),32,(dd)3));
+R(SBB(32,READDD(eax),32,(dd)1));
+R(CMP(32,READDD(eax),32,(dd)1));
+R(JNE(failure));
+R(CLC);
+R(MOV(32,READDD(eax),32,(dd)3));
+R(SBB(32,READDD(eax),32,(dd)1));
+R(CMP(32,READDD(eax),32,(dd)2));
+R(JNE(failure));
+R(STC);
+R(MOV(32,READDD(eax),32,(dd)3));
+R(ADC(32,READDD(eax),32,(dd)1));
+R(CMP(32,READDD(eax),32,(dd)5));
+R(JNE(failure));
+R(CLC);
+R(MOV(32,READDD(eax),32,(dd)3));
+R(ADC(32,READDD(eax),32,(dd)1));
+R(CMP(32,READDD(eax),32,(dd)4));
+R(JNE(failure));
+R(MOV(32,READDD(eax),32,(dd)2));
+R(MOV(32,READDD(ebx),32,(dd)3));
+R(SUB(32,READDD(ebx),32,(dd)READDD(eax)));
+R(JB(failure));
+R(CMP(32,READDD(ebx),32,(dd)1));
+R(JNE(failure));
+R(CMP(32,READDD(ebx),32,(dd)2));
+R(JA(failure));
+R(CMP(32,READDD(ebx),32,(dd)0));
+R(JB(failure));
+R(CMP(32,READDD(ebx),32,(dd)1));
+R(JB(failure));
+R(JA(failure));
+R(MOV(32,READDD(eax),32,(dd)(((0-1))-((((0-2))+3)))));
+R(CMP(32,READDD(eax),32,(dd)((0-2))));
+R(JNE(failure));
+R(MOV(32,READDD(ebx),32,(dd)2));
+R(CMP(32,READDD(eax),32,(dd)READDD(ebx)));
+R(JB(failure));
+R(MOV(8,READDBl(edx),8,(db)99));
+R(SUB(8,READDBl(edx),8,(db)97));
+R(CMP(8,READDBl(edx),8,(db)2));
+R(JNE(failure));
+R(XOR(32,READDD(edi),32,(dd)READDD(edi)));
+R(ADD(32,READDD(edi),32,(dd)(14*320)));
+R(MOV(16,READDW(eax),16,(dw)1285));
+R(AAD);
+R(CMP(16,READDW(eax),16,(dw)55));
+R(JNE(failure));
+R(MOV(16,READDW(eax),16,(dw)772));
+R(AAD);
+R(CMP(16,READDW(eax),16,(dw)34));
+R(JNE(failure));
+R(MOV(8,READDBl(eax),8,(db)0));
+R(JMP(exitlabel));
 failure:
-	R(MOV(8,READDBl(eax),8,(db)1));
+R(MOV(8,READDBl(eax),8,(db)1));
 exitlabel:
-	R(MOV(8,READDBh(eax),8,(db)76));
-	R(INT(33));
+R(MOV(8,READDBh(eax),8,(db)76));
+R(INT(33));
 
-	m.executionFinished = 1;
+m.executionFinished = 1;
 moveToBackGround:
-	return (m.executionFinished == 0);
+return (m.executionFinished == 0);
 }
 void asm2C_printOffsets(unsigned int offset) {
-	FILE * file;
-	file=fopen("./memoryMap.log", "w");
-	fprintf(file, "xox %x (from beg RW) %x:var1\n",(unsigned int) offsetof(struct Mem,var1)-offset,(unsigned int) offsetof(struct Mem,var1));
-	fprintf(file, "xox %x (from beg RW) %x:var2\n",(unsigned int) offsetof(struct Mem,var2)-offset,(unsigned int) offsetof(struct Mem,var2));
-	fprintf(file, "xox %x (from beg RW) %x:var3\n",(unsigned int) offsetof(struct Mem,var3)-offset,(unsigned int) offsetof(struct Mem,var3));
-	fprintf(file, "xox %x (from beg RW) %x:var4\n",(unsigned int) offsetof(struct Mem,var4)-offset,(unsigned int) offsetof(struct Mem,var4));
-	fprintf(file, "xox %x (from beg RW) %x:var5\n",(unsigned int) offsetof(struct Mem,var5)-offset,(unsigned int) offsetof(struct Mem,var5));
-	fprintf(file, "xox %x (from beg RW) %x:dummy1\n",(unsigned int) offsetof(struct Mem,dummy1)-offset,(unsigned int) offsetof(struct Mem,dummy1));
+FILE * file;
+file=fopen("./memoryMap.log", "w");
+fprintf(file, "xox %x (from beg RW) %x:var1\n",(unsigned int) offsetof(struct Mem,var1)-offset,(unsigned int) offsetof(struct Mem,var1));
+fprintf(file, "xox %x (from beg RW) %x:var2\n",(unsigned int) offsetof(struct Mem,var2)-offset,(unsigned int) offsetof(struct Mem,var2));
+fprintf(file, "xox %x (from beg RW) %x:var3\n",(unsigned int) offsetof(struct Mem,var3)-offset,(unsigned int) offsetof(struct Mem,var3));
+fprintf(file, "xox %x (from beg RW) %x:var4\n",(unsigned int) offsetof(struct Mem,var4)-offset,(unsigned int) offsetof(struct Mem,var4));
+fprintf(file, "xox %x (from beg RW) %x:var5\n",(unsigned int) offsetof(struct Mem,var5)-offset,(unsigned int) offsetof(struct Mem,var5));
+fprintf(file, "xox %x (from beg RW) %x:dummy1\n",(unsigned int) offsetof(struct Mem,dummy1)-offset,(unsigned int) offsetof(struct Mem,dummy1));
 
-	fclose(file);
+fclose(file);
 }
 
 FILE * logDebug=NULL;
@@ -694,8 +721,8 @@ void asm2C_INT(int a) {
 
 #ifdef INCLUDEMAIN
 int main() {
-	asm2C_init(); stackDump(); while (program()) { }
-	return m.exitCode;
+asm2C_init();stackDump();while (program()) { }
+return m.exitCode;
 }
 #endif
 

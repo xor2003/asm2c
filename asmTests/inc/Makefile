@@ -147,7 +147,9 @@ endif
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(fpic) -c -o $@ $<
-	$(CC) $(fpic) -S -c $<
+	$(CC) $(fpic) -E $< > $(TARGET_NAME).e
+	indent -nut -l140 $(TARGET_NAME).e
+	$(CC) $(fpic) -m32 -mtune=i386 -masm=intel -Os -Og -masm=intel -S -Wa,-adhln $<
 test: $(OBJECTS)
 	$(CC) $(fpic) $(OBJECTS) -o $(TARGET_NAME).out $(LDFLAGS)
 

@@ -128,8 +128,8 @@ typedef union registry16Bits
 
 #define AFFECT_ZF(a) m.ZF=(a==0)
 #define AFFECT_CF(a) m.CF=a
-#define AFFECT_SF(nbBits, a) m.SF=(a>>(nbBits-1))
 #define ISNEGATIVE(nbBits,a) (a & (1 << (nbBits-1)))
+#define AFFECT_SF(nbBits, a) m.SF=ISNEGATIVE(nbBits,a) //(a>>(nbBits-1))&1
 
 // TODO: add missings affected flags on CMP
 #define CMP(nbBits,a,nbBitsSrc,b) AFFECT_ZF(a-b); AFFECT_CF(a<b); AFFECT_SF(nbBits,(a-b));
@@ -144,7 +144,7 @@ typedef union registry16Bits
 #define ROR(nbBits,a,nbBitsSrc,b) a=(a>>b | a<<(nbBits-b))
 #define ROL(nbBits,a,nbBitsSrc,b) a=(a<<b | a>>(nbBits-b))
 
-#define SAR(nbBits,a,nbBitsSrc,b) a= ((long)a) / (1 << b)  // TODO
+#define SAR(nbBits,a,nbBitsSrc,b) a=(( (a & (1 << (nbBits-1)))?-1:0)<<(nbBits-(0x1f & b))) | (a >> (0x1f & b))  // TODO
 
 #define READDDp(a) ((dd *) &m.a)
 #define READDWp(a) ((dw *) &m.a)
@@ -173,8 +173,8 @@ typedef union registry16Bits
 #define ADD(nbBits,a,nbBitsSrc,b) a=a+b; AFFECT_ZF(a); AFFECT_CF(a<b); AFFECT_SF(nbBits,a);
 #define SUB(nbBits,a,nbBitsSrc,b) a=a-b; AFFECT_ZF(a); AFFECT_CF(b<a); AFFECT_SF(nbBits,a);
 
-#define ADC(nbBits,a,nbBitsSrc,b) ADD(nbBits,a,nbBitsSrc,b); a += m.CF //TODO
-#define SBB(nbBits,a,nbBitsSrc,b) SUB(nbBits,a,nbBitsSrc,b); a -= m.CF
+#define ADC(nbBits,a,nbBitsSrc,b) a=a+b+m.CF; AFFECT_ZF(a); AFFECT_CF(a<b); AFFECT_SF(nbBits,a); //TODO
+#define SBB(nbBits,a,nbBitsSrc,b) a=a-b-m.CF; AFFECT_ZF(a); AFFECT_CF(b<a); AFFECT_SF(nbBits,a); 
 
 // TODO: should affects OF, SF, ZF, AF, and PF
 #define INC(nbBits,a) a=a+1; AFFECT_ZF(a)
@@ -196,14 +196,14 @@ typedef union registry16Bits
 #define JAE(label) JNB(label)
 #define JNC(label) JNB(label)
 
-#define JGE(label) if (m.ZF || !m.SF) GOTOLABEL(label) // TODO
+#define JGE(label) if (!m.SF) GOTOLABEL(label) // TODO
 #define JG(label) if (!m.ZF && !m.SF) GOTOLABEL(label) // TODO
 
 #define JLE(label) if (m.ZF || m.SF) GOTOLABEL(label) // TODO
-#define JL(label) if (!m.ZF && m.SF) GOTOLABEL(label) // TODO
+#define JL(label) if (m.SF) GOTOLABEL(label) // TODO
 
-#define JCXZ(label) if (m.cx.dw.val == 0) GOTOLABEL(label) // TODO
-//#define JNCXZ(label) if (m.cx.dw.val != 0) GOTOLABEL(label) // TODO
+#define JCXZ(label) if (m.ecx.dw.val == 0) GOTOLABEL(label) // TODO
+#define JECXZ(label) if (m.ecx.dd.val == 0) GOTOLABEL(label) // TODO
 
 
 #define JB(label) if (m.CF) GOTOLABEL(label)
@@ -233,7 +233,7 @@ typedef union registry16Bits
 // LEA - Load Effective Address
 #define LEA(nbBits,dest,nbBitsSrc,src) dest = src
 
-#define XCHG(nbBits,dest,nbBitsSrc,src) dd tmp = dest; dest = src; src = tmp //TODO
+#define XCHG(nbBits,dest,nbBitsSrc,src) PUSH(nbBits,dest);PUSH(nbBitsSrc,src);POP(nbBits,dest);POP(nbBits,dest) //TODO
 
 // MOVSx (DF FLAG not implemented)
 #define MOVS(a,ecx) src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
@@ -245,18 +245,18 @@ typedef union registry16Bits
 		memmove(dest,src,a*ecx); m.edi.dd.val+=a*ecx; m.esi.dd.val+=a*ecx; \
 	}
 
-#define CMPS(a,ecx) \ // TODO test
-	for(i=0; i<ecx; i++) {  \
+#define CMPS(a,ecx) \
+	for(size_t i=0; i<ecx; i++) {  \
 			src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
-			AFFECT_ZF( (*dest-*src) ); m.edi.dd.val+=a; m.esi.dd.val+=a; } \
+			AFFECT_ZF( (*(char*)dest-*(char*)src) ); m.edi.dd.val+=a; m.esi.dd.val+=a; \
 			if (!m.ZF) break; \
 	}
 
-#define REP_CMPS(b) CMPS(b,m.ecx.dd.val)
-#define REP_CMPSB REP_CMPS(1)
-#define CBW m.eax.dbh.val = m.eax.dbl.val >> 7 // TODO
-#define CWD m.edx.dw.val = m.eax.dw.val >> 15
-#define CWDE m.eax.dw.v0 = m.eax.dw.val >> 15
+#define REPE_CMPS(b) CMPS(b,m.ecx.dd.val)
+#define REPE_CMPSB REPE_CMPS(1)
+#define CBW m.eax.dbh.val = m.eax.dbl.val & (1 << 7)?-1:0 // TODO
+#define CWD m.edx.dw.val = m.eax.dw.val & (1 << 15)?-1:0
+#define CWDE m.eax.dw.v0 = m.eax.dw.val & (1 << 15)?-1:0
 
 #define MOVSB MOVS(1,1)
 #define MOVSW MOVS(2,1)
@@ -319,7 +319,7 @@ typedef union registry16Bits
 
 #define STC m.CF=1 //TODO
 #define CLC m.CF=0 //TODO
-#define CMC m.CF= ~m.CF //TODO
+#define CMC m.CF ^= 1 //TODO
 
 void stackDump();
 void hexDump (void *addr, int len);

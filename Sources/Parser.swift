@@ -519,7 +519,12 @@ class Parser {
         guard case let .Instruction0(instruction) = popCurrentToken() else {
             throw Errors.ExpectedInstruction
         }
-        if (instruction.uppercased()=="REP" || instruction.uppercased()=="REPE") {
+        if (instruction.uppercased()=="REPE") {
+            guard case let .Instruction0(instructionRep) = popCurrentToken() else {
+                throw Errors.ExpectedInstruction
+            }
+            return Instruction0Node(instruction: "REPE_\(instructionRep)")
+        } else if (instruction.uppercased()=="REP") {
             guard case let .Instruction0(instructionRep) = popCurrentToken() else {
                 throw Errors.ExpectedInstruction
             }

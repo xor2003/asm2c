@@ -4,67 +4,66 @@
 #pragma GCC diagnostic ignored "-Wunused-label"
 
 Memory m = {
-	{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
-	0,0,0,0,0,0, //flags
-	0, //isLittle
-	0, //exitCode
-	{72,101,108,108,111,32,87,111,114,108,100,32,70,114,111,109,32,80,114,111,116,101,99,116,101,100,32,77,111,100,101,33,10,13,36}, //_msg
-	{0}, //dummy1
+{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
+0,0,0,0,0,0, //flags
+0, //isLittle
+0, //exitCode
+{72,101,108,108,111,32,87,111,114,108,100,32,70,114,111,109,32,80,114,111,116,101,99,116,101,100,32,77,111,100,101,33,10,13,36}, //_msg
+{0}, //dummy1
 
-	{0}, //vgaPalette
-	1,{0}, //selectorsPointer+selectors
-	0,{0}, //stackPointer+stack
-	0, //heapPointer
-	{0}, //heap
-	{0},{0},{0}, NULL
-};
+{0}, //vgaPalette
+1,{0}, //selectorsPointer+selectors
+0,{0}, //stackPointer+stack
+0, //heapPointer
+{0}, //heap
+{0},{0},{0}, NULL};
 
 int program() {
-	jmp_buf jmpbuffer;
-	void * dest;
-	void * src;
-	int i;
+jmp_buf jmpbuffer;
+void * dest;
+void * src;
+int i;
 #ifdef INCLUDEMAIN
-	dest=NULL; src=NULL; i=0; //to avoid a warning.
+dest=NULL;src=NULL;i=0; //to avoid a warning.
 #endif
-	if (m.executionFinished) goto moveToBackGround;
-	if (m.jumpToBackGround) {
-		m.jumpToBackGround = 0;
+if (m.executionFinished) goto moveToBackGround;
+if (m.jumpToBackGround) {
+m.jumpToBackGround = 0;
 #ifdef MRBOOM
-		if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
-		if (m.nosetjmp==2) goto directjeu;
-		if (m.nosetjmp==1) goto directmenu;
+if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
+if (m.nosetjmp==2) goto directjeu;
+if (m.nosetjmp==1) goto directmenu;
 #endif
-		RET;
-	}
-	R(STI);
-	R(CLD);
-	R(MOV(8,READDBh(eax),8,(db)9));
-	R(MOV(32,m.edx.dd.val,32,(((dd)offsetof(struct Mem,_msg)))));
-	R(INT(33));
-	R(MOV(32,READDD(ebx),32,(dd)((0-1))));
-	R(MOV(8,READDBl(ebx),8,(db)0));
-	R(CMP(32,READDD(ebx),32,(dd)4294967040));
-	R(JNE(failure));
-	R(XOR(32,READDD(eax),32,(dd)READDD(eax)));
-	R(JMP(exitlabel));
+RET;
+}
+R(STI);
+R(CLD);
+R(MOV(8,READDBh(eax),8,(db)9));
+R(MOV(32,m.edx.dd.val,32,(((dd)offsetof(struct Mem,_msg)))));
+R(INT(33));
+R(MOV(32,READDD(ebx),32,(dd)((0-1))));
+R(MOV(8,READDBl(ebx),8,(db)0));
+R(CMP(32,READDD(ebx),32,(dd)4294967040));
+R(JNE(failure));
+R(XOR(32,READDD(eax),32,(dd)READDD(eax)));
+R(JMP(exitlabel));
 failure:
-	R(MOV(8,READDBl(eax),8,(db)1));
+R(MOV(8,READDBl(eax),8,(db)1));
 exitlabel:
-	R(MOV(8,READDBh(eax),8,(db)76));
-	R(INT(33));
+R(MOV(8,READDBh(eax),8,(db)76));
+R(INT(33));
 
-	m.executionFinished = 1;
+m.executionFinished = 1;
 moveToBackGround:
-	return (m.executionFinished == 0);
+return (m.executionFinished == 0);
 }
 void asm2C_printOffsets(unsigned int offset) {
-	FILE * file;
-	file=fopen("./memoryMap.log", "w");
-	fprintf(file, "xox %x (from beg RW) %x:_msg\n",(unsigned int) offsetof(struct Mem,_msg)-offset,(unsigned int) offsetof(struct Mem,_msg));
-	fprintf(file, "xox %x (from beg RW) %x:dummy1\n",(unsigned int) offsetof(struct Mem,dummy1)-offset,(unsigned int) offsetof(struct Mem,dummy1));
+FILE * file;
+file=fopen("./memoryMap.log", "w");
+fprintf(file, "xox %x (from beg RW) %x:_msg\n",(unsigned int) offsetof(struct Mem,_msg)-offset,(unsigned int) offsetof(struct Mem,_msg));
+fprintf(file, "xox %x (from beg RW) %x:dummy1\n",(unsigned int) offsetof(struct Mem,dummy1)-offset,(unsigned int) offsetof(struct Mem,dummy1));
 
-	fclose(file);
+fclose(file);
 }
 
 FILE * logDebug=NULL;
@@ -658,8 +657,8 @@ void asm2C_INT(int a) {
 
 #ifdef INCLUDEMAIN
 int main() {
-	asm2C_init(); stackDump(); while (program()) { }
-	return m.exitCode;
+asm2C_init();stackDump();while (program()) { }
+return m.exitCode;
 }
 #endif
 

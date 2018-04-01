@@ -5,90 +5,89 @@
 #define two 2
 
 Memory m = {
-	{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
-	0,0,0,0,0,0, //flags
-	0, //isLittle
-	0, //exitCode
+{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
+0,0,0,0,0,0, //flags
+0, //isLittle
+0, //exitCode
 
-	{0}, //vgaPalette
-	1,{0}, //selectorsPointer+selectors
-	0,{0}, //stackPointer+stack
-	0, //heapPointer
-	{0}, //heap
-	{0},{0},{0}, NULL
-};
+{0}, //vgaPalette
+1,{0}, //selectorsPointer+selectors
+0,{0}, //stackPointer+stack
+0, //heapPointer
+{0}, //heap
+{0},{0},{0}, NULL};
 
 int program() {
-	jmp_buf jmpbuffer;
-	void * dest;
-	void * src;
-	int i;
+jmp_buf jmpbuffer;
+void * dest;
+void * src;
+int i;
 #ifdef INCLUDEMAIN
-	dest=NULL; src=NULL; i=0; //to avoid a warning.
+dest=NULL;src=NULL;i=0; //to avoid a warning.
 #endif
-	if (m.executionFinished) goto moveToBackGround;
-	if (m.jumpToBackGround) {
-		m.jumpToBackGround = 0;
+if (m.executionFinished) goto moveToBackGround;
+if (m.jumpToBackGround) {
+m.jumpToBackGround = 0;
 #ifdef MRBOOM
-		if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
-		if (m.nosetjmp==2) goto directjeu;
-		if (m.nosetjmp==1) goto directmenu;
+if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
+if (m.nosetjmp==2) goto directjeu;
+if (m.nosetjmp==1) goto directmenu;
 #endif
-		RET;
-	}
-	R(XOR(32,READDD(eax),32,(dd)READDD(eax)));
-	R(XOR(32,READDD(edx),32,(dd)READDD(edx)));
-	R(XOR(32,READDD(ebx),32,(dd)READDD(ebx)));
-	R(INC(32,(READDD(ebx))));
-	CALL(incebx);
-	R(INC(32,(READDD(ecx))));
-	R(INC(32,(READDD(ecx))));
-	CALL(aincecx);
-	R(CMP(32,READDD(edx),32,(dd)1));
-	R(JNE(failure));
-	R(CMP(32,READDD(ecx),32,(dd)3));
-	R(JNE(failure));
-	R(CMP(32,READDD(ebx),32,(dd)3));
-	R(JNE(failure));
-	R(JMP(exitlabel));
+RET;
+}
+R(XOR(32,READDD(eax),32,(dd)READDD(eax)));
+R(XOR(32,READDD(edx),32,(dd)READDD(edx)));
+R(XOR(32,READDD(ebx),32,(dd)READDD(ebx)));
+R(INC(32,(READDD(ebx))));
+CALL(incebx);
+R(INC(32,(READDD(ecx))));
+R(INC(32,(READDD(ecx))));
+CALL(aincecx);
+R(CMP(32,READDD(edx),32,(dd)1));
+R(JNE(failure));
+R(CMP(32,READDD(ecx),32,(dd)3));
+R(JNE(failure));
+R(CMP(32,READDD(ebx),32,(dd)3));
+R(JNE(failure));
+R(JMP(exitlabel));
 //PROC incebx
 incebx:
-	R(INC(32,(READDD(ebx))));
-	R(CMP(32,READDD(ebx),32,(dd)two));
-	R(JE(ok));
-	RET;
+R(INC(32,(READDD(ebx))));
+R(CMP(32,READDD(ebx),32,(dd)two));
+R(JE(ok));
+RET;
 ok:
-	R(INC(32,(READDD(ebx))));
-	RET;
+R(INC(32,(READDD(ebx))));
+RET;
 
 //PROC aincecx
 aincecx:
-	R(INC(32,(READDD(ecx))));
-	CALL(aincedx);
-	RET;
+R(INC(32,(READDD(ecx))));
+CALL(aincedx);
+RET;
 
 //PROC aincedx
 aincedx:
-	R(INC(32,(READDD(edx))));
-	RET;
+R(INC(32,(READDD(edx))));
+RET;
 
-	R(MOV(8,READDBl(eax),8,(db)0));
-	R(JMP(exitlabel));
+R(MOV(8,READDBl(eax),8,(db)0));
+R(JMP(exitlabel));
 failure:
-	R(MOV(8,READDBl(eax),8,(db)1));
+R(MOV(8,READDBl(eax),8,(db)1));
 exitlabel:
-	R(MOV(8,READDBh(eax),8,(db)76));
-	R(INT(33));
+R(MOV(8,READDBh(eax),8,(db)76));
+R(INT(33));
 
-	m.executionFinished = 1;
+m.executionFinished = 1;
 moveToBackGround:
-	return (m.executionFinished == 0);
+return (m.executionFinished == 0);
 }
 void asm2C_printOffsets(unsigned int offset) {
-	FILE * file;
-	file=fopen("./memoryMap.log", "w");
+FILE * file;
+file=fopen("./memoryMap.log", "w");
 
-	fclose(file);
+fclose(file);
 }
 
 FILE * logDebug=NULL;
@@ -682,8 +681,8 @@ void asm2C_INT(int a) {
 
 #ifdef INCLUDEMAIN
 int main() {
-	asm2C_init(); stackDump(); while (program()) { }
-	return m.exitCode;
+asm2C_init();stackDump();while (program()) { }
+return m.exitCode;
 }
 #endif
 

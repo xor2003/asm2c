@@ -25,7 +25,11 @@ extern "C" {
 #define INLINE
 #endif
 
+#if defined(_REAL_MODE)
+#define realAddress(offset,segment) ((db *)&m+(dd)offset + 0x10*m.segment.dw.val)
+#else
 #define realAddress(offset,segment) ((db *)&m+(dd)offset+m.selectors[m.segment.dw.val])
+#endif
 
 #define db uint8_t
 #define dw uint16_t
@@ -126,8 +130,8 @@ typedef union registry16Bits
 
 #define AFFECT_ZF(a) m.ZF=(a==0)
 #define AFFECT_CF(a) m.CF=a
-#define AFFECT_SF(nbBits, a) m.SF=(a>>(nbBits-1))
 #define ISNEGATIVE(nbBits,a) (a & (1 << (nbBits-1)))
+#define AFFECT_SF(nbBits, a) m.SF=ISNEGATIVE(nbBits,a) //(a>>(nbBits-1))&1
 
 // TODO: add missings affected flags on CMP
 #define CMP(nbBits,a,nbBitsSrc,b) AFFECT_ZF(a-b); AFFECT_CF(a<b); AFFECT_SF(nbBits,(a-b));
@@ -141,6 +145,8 @@ typedef union registry16Bits
 #define SHL(nbBits,a,nbBitsSrc,b) a=a<<b
 #define ROR(nbBits,a,nbBitsSrc,b) a=(a>>b | a<<(nbBits-b))
 #define ROL(nbBits,a,nbBitsSrc,b) a=(a<<b | a>>(nbBits-b))
+
+#define SAR(nbBits,a,nbBitsSrc,b) a=(( (a & (1 << (nbBits-1)))?-1:0)<<(nbBits-(0x1f & b))) | (a >> (0x1f & b))  // TODO
 
 #define READDDp(a) ((dd *) &m.a)
 #define READDWp(a) ((dw *) &m.a)
@@ -164,12 +170,23 @@ typedef union registry16Bits
 #define READDBh(a) (*((db *) &m.a.dbh.val))
 #define READDBl(a) (*((db *) &m.a.dbl.val))
 
+#define AAD m.eax.dbl.val = m.eax.dbl.val + (m.eax.dbh.val * 10) & 0xFF; m.eax.dbh.val = 0; //TODO
+
 #define ADD(nbBits,a,nbBitsSrc,b) a=a+b; AFFECT_ZF(a); AFFECT_CF(a<b); AFFECT_SF(nbBits,a);
 #define SUB(nbBits,a,nbBitsSrc,b) a=a-b; AFFECT_ZF(a); AFFECT_CF(b<a); AFFECT_SF(nbBits,a);
+
+#define ADC(nbBits,a,nbBitsSrc,b) a=a+b+m.CF; AFFECT_ZF(a); AFFECT_CF(a<b); AFFECT_SF(nbBits,a); //TODO
+#define SBB(nbBits,a,nbBitsSrc,b) a=a-b-m.CF; AFFECT_ZF(a); AFFECT_CF(b<a); AFFECT_SF(nbBits,a); 
 
 // TODO: should affects OF, SF, ZF, AF, and PF
 #define INC(nbBits,a) a=a+1; AFFECT_ZF(a)
 #define DEC(nbBits,a) a=a-1; AFFECT_ZF(a)
+
+#define NOT(nbBits,a) a= ~a;// AFFECT_ZF(a) //TODO
+#define SETNZ(nbBits,a) a= (!m.ZF)&1; //TODO
+#define SETZ(nbBits,a) a= (m.ZF)&1; //TODO
+#define SETB(nbBits,a) a= (m.CF)&1; //TODO
+
 
 #define JE(label) if (m.ZF) GOTOLABEL(label)
 #define JZ(label) JE(label)
@@ -180,6 +197,16 @@ typedef union registry16Bits
 #define JNB(label) if (!m.CF) GOTOLABEL(label)
 #define JAE(label) JNB(label)
 #define JNC(label) JNB(label)
+
+#define JGE(label) if (!m.SF) GOTOLABEL(label) // TODO
+#define JG(label) if (!m.ZF && !m.SF) GOTOLABEL(label) // TODO
+
+#define JLE(label) if (m.ZF || m.SF) GOTOLABEL(label) // TODO
+#define JL(label) if (m.SF) GOTOLABEL(label) // TODO
+
+#define JCXZ(label) if (m.ecx.dw.val == 0) GOTOLABEL(label) // TODO
+#define JECXZ(label) if (m.ecx.dd.val == 0) GOTOLABEL(label) // TODO
+
 
 #define JB(label) if (m.CF) GOTOLABEL(label)
 #define JC(label) JB(label)
@@ -195,11 +222,20 @@ typedef union registry16Bits
 #define JBE(label) JNA(label)
 
 #define MOV(nbBits,dest,nbBitsSrc,src) dest = src
+
+#define MOV(nbBits,dest,nbBitsSrc,src) dest = src
 #define MOVZX(nbBits,dest,nbBitsSrc,src) dest = src
 #define MOVSX(nbBits,dest,nbBitsSrc,src) if (ISNEGATIVE(nbBitsSrc,src)) { dest = ((-1 ^ (( 1 <<nbBitsSrc )-1)) | src ); } else { dest = src; }
 
+#define BT(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src) //TODO
+#define BTS(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src); dest |= 1 << src
+#define BTC(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src); dest ^= (1 << src)
+#define BTR(nbBits,dest,nbBitsSrc,src) m.CF = dest & (1 << src); dest &= ~(1 << src)
+
 // LEA - Load Effective Address
 #define LEA(nbBits,dest,nbBitsSrc,src) dest = src
+
+#define XCHG(nbBits,dest,nbBitsSrc,src) PUSH(nbBits,dest);PUSH(nbBitsSrc,src);POP(nbBits,dest);POP(nbBits,dest) //TODO
 
 // MOVSx (DF FLAG not implemented)
 #define MOVS(a,ecx) src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
@@ -210,6 +246,19 @@ typedef union registry16Bits
 	} else { \
 		memmove(dest,src,a*ecx); m.edi.dd.val+=a*ecx; m.esi.dd.val+=a*ecx; \
 	}
+
+#define CMPS(a,ecx) \
+	for(size_t i=0; i<ecx; i++) {  \
+			src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
+			AFFECT_ZF( (*(char*)dest-*(char*)src) ); m.edi.dd.val+=a; m.esi.dd.val+=a; \
+			if (!m.ZF) break; \
+	}
+
+#define REPE_CMPS(b) CMPS(b,m.ecx.dd.val)
+#define REPE_CMPSB REPE_CMPS(1)
+#define CBW m.eax.dbh.val = m.eax.dbl.val & (1 << 7)?-1:0 // TODO
+#define CWD m.edx.dw.val = m.eax.dw.val & (1 << 15)?-1:0
+#define CWDE m.eax.dw.v0 = m.eax.dw.val & (1 << 15)?-1:0
 
 #define MOVSB MOVS(1,1)
 #define MOVSW MOVS(2,1)
@@ -265,9 +314,14 @@ typedef union registry16Bits
 #define GOTOLABEL(a) goto a
 
 #define LOOP(label) DEC(32,m.ecx.dd.val); JNZ(label)
+#define LOOPE(label) --m.ecx.dd.val; if (m.ecx.dd.val!=0 && m.ZF) GOTOLABEL(label) //TODO
 
 #define CLD m.DF=0
 #define STD m.DF=1
+
+#define STC m.CF=1 //TODO
+#define CLC m.CF=0 //TODO
+#define CMC m.CF ^= 1 //TODO
 
 void stackDump();
 void hexDump (void *addr, int len);
@@ -287,6 +341,7 @@ int8_t asm2C_IN(int16_t data);
 #define IN(a,b) a = asm2C_IN(b); TESTJUMPTOBACKGROUND
 
 #define STI // TODO: STI not implemented
+#define CLI // TODO: STI not implemented
 #define PUSHF
 #define POPF
 #define NOP
@@ -298,6 +353,9 @@ int8_t asm2C_IN(int16_t data);
 	}
 
 #define RET POP(x,jmpbuffer); longjmp(jmpbuffer, 0);
+
+#define RETN RET //TODO test
+#define RETF RET
 
 #ifdef __LIBSDL2__
 #include <SDL2/SDL.h>
@@ -350,45 +408,45 @@ extern "C" {
 #define SHLSHR_H__
 #pragma pack(push, 1)
 typedef struct Mem {
-	registry32Bits eax;
-	registry32Bits ebx;
-	registry32Bits ecx;
-	registry32Bits edx;
-	registry32Bits esi;
-	registry32Bits edi;
-	registry32Bits ebp;
-	registry32Bits esp;
-	registry16Bits cs;
-	registry16Bits ds;
-	registry16Bits es;
-	registry16Bits fs;
-	registry16Bits gs;
-	registry16Bits ss;
-	bool CF;
-	bool ZF;
-	bool DF;
-	bool SF;
-	bool isLittle;
-	bool jumpToBackGround;
-	bool executionFinished;
-	db exitCode;
-	db var1[3];
-	dw var2[3];
-	dd var3[4];
-	db var4[100];
-	db dummy1[4096];
+registry32Bits eax;
+registry32Bits ebx;
+registry32Bits ecx;
+registry32Bits edx;
+registry32Bits esi;
+registry32Bits edi;
+registry32Bits ebp;
+registry32Bits esp;
+registry16Bits cs;
+registry16Bits ds;
+registry16Bits es;
+registry16Bits fs;
+registry16Bits gs;
+registry16Bits ss;
+bool CF;
+bool ZF;
+bool DF;
+bool SF;
+bool isLittle;
+bool jumpToBackGround;
+bool executionFinished;
+db exitCode;
+db var1[3];
+dw var2[3];
+dd var3[4];
+db var4[100];
+db dummy1[4096];
 
-	db vgaPalette[256*3];
-	dd selectorsPointer;
-	dd selectors[NB_SELECTORS];
-	dd stackPointer;
-	dd stack[STACK_SIZE];
-	dd heapPointer;
-	db heap[HEAP_SIZE];
-	db vgaRamPaddingBefore[VGARAM_SIZE];
-	db vgaRam[VGARAM_SIZE];
-	db vgaRamPaddingAfter[VGARAM_SIZE];
-	char *path;
+db vgaPalette[256*3];
+dd selectorsPointer;
+dd selectors[NB_SELECTORS];
+dd stackPointer;
+dd stack[STACK_SIZE];
+dd heapPointer;
+db heap[HEAP_SIZE];
+db vgaRamPaddingBefore[VGARAM_SIZE];
+db vgaRam[VGARAM_SIZE];
+db vgaRamPaddingAfter[VGARAM_SIZE];
+char *path;
 } Memory;
 #pragma pack(pop)
 extern Memory m;

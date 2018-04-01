@@ -4,61 +4,77 @@
 #pragma GCC diagnostic ignored "-Wunused-label"
 
 Memory m = {
-	{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
-	0,0,0,0,0,0, //flags
-	0, //isLittle
-	0, //exitCode
+{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}},{{0}}, // registers
+0,0,0,0,0,0, //flags
+0, //isLittle
+0, //exitCode
 
-	{0}, //vgaPalette
-	1,{0}, //selectorsPointer+selectors
-	0,{0}, //stackPointer+stack
-	0, //heapPointer
-	{0}, //heap
-	{0},{0},{0}, NULL
-};
+{0}, //vgaPalette
+1,{0}, //selectorsPointer+selectors
+0,{0}, //stackPointer+stack
+0, //heapPointer
+{0}, //heap
+{0},{0},{0}, NULL};
 
 int program() {
-	jmp_buf jmpbuffer;
-	void * dest;
-	void * src;
-	int i;
+jmp_buf jmpbuffer;
+void * dest;
+void * src;
+int i;
 #ifdef INCLUDEMAIN
-	dest=NULL; src=NULL; i=0; //to avoid a warning.
+dest=NULL;src=NULL;i=0; //to avoid a warning.
 #endif
-	if (m.executionFinished) goto moveToBackGround;
-	if (m.jumpToBackGround) {
-		m.jumpToBackGround = 0;
+if (m.executionFinished) goto moveToBackGround;
+if (m.jumpToBackGround) {
+m.jumpToBackGround = 0;
 #ifdef MRBOOM
-		if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
-		if (m.nosetjmp==2) goto directjeu;
-		if (m.nosetjmp==1) goto directmenu;
+if (m.nosetjmp) m.stackPointer=0; // this an an hack to avoid setJmp in saved state.
+if (m.nosetjmp==2) goto directjeu;
+if (m.nosetjmp==1) goto directmenu;
 #endif
-		RET;
-	}
-	R(XOR(32,READDD(edx),32,(dd)READDD(edx)));
-	R(MOV(32,READDD(ecx),32,(dd)10));
+RET;
+}
+R(XOR(32,READDD(edx),32,(dd)READDD(edx)));
+R(MOV(32,READDD(ecx),32,(dd)10));
 toto:
-	R(INC(32,(READDD(edx))));
-	R(LOOP(toto));
-	R(CMP(32,READDD(edx),32,(dd)10));
-	R(JNE(failure));
-	R(MOV(8,READDBl(eax),8,(db)0));
-	R(JMP(exitlabel));
+R(INC(32,(READDD(edx))));
+R(LOOP(toto));
+R(CMP(32,READDD(edx),32,(dd)10));
+R(JNE(failure));
+R(XOR(32,READDD(edx),32,(dd)READDD(edx)));
+R(MOV(32,READDD(ecx),32,(dd)10));
+toto1:
+R(INC(32,(READDD(edx))));
+R(SUB(32,READDD(eax),32,(dd)READDD(eax)));
+R(LOOPE(toto1));
+R(CMP(32,READDD(edx),32,(dd)10));
+R(JNE(failure));
+R(XOR(32,READDD(edx),32,(dd)READDD(edx)));
+R(MOV(32,READDD(ecx),32,(dd)10));
+toto2:
+R(INC(32,(READDD(edx))));
+R(SUB(32,READDD(eax),32,(dd)READDD(eax)));
+R(INC(32,(READDD(eax))));
+R(LOOPE(toto2));
+R(CMP(32,READDD(edx),32,(dd)1));
+R(JNE(failure));
+R(MOV(8,READDBl(eax),8,(db)0));
+R(JMP(exitlabel));
 failure:
-	R(MOV(8,READDBl(eax),8,(db)1));
+R(MOV(8,READDBl(eax),8,(db)1));
 exitlabel:
-	R(MOV(8,READDBh(eax),8,(db)76));
-	R(INT(33));
+R(MOV(8,READDBh(eax),8,(db)76));
+R(INT(33));
 
-	m.executionFinished = 1;
+m.executionFinished = 1;
 moveToBackGround:
-	return (m.executionFinished == 0);
+return (m.executionFinished == 0);
 }
 void asm2C_printOffsets(unsigned int offset) {
-	FILE * file;
-	file=fopen("./memoryMap.log", "w");
+FILE * file;
+file=fopen("./memoryMap.log", "w");
 
-	fclose(file);
+fclose(file);
 }
 
 FILE * logDebug=NULL;
@@ -652,8 +668,8 @@ void asm2C_INT(int a) {
 
 #ifdef INCLUDEMAIN
 int main() {
-	asm2C_init(); stackDump(); while (program()) { }
-	return m.exitCode;
+asm2C_init();stackDump();while (program()) { }
+return m.exitCode;
 }
 #endif
 
