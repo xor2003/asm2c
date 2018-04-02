@@ -235,10 +235,10 @@ typedef union registry16Bits
 // LEA - Load Effective Address
 #define LEA(nbBits,dest,nbBitsSrc,src) dest = src
 
-#define XCHG(nbBits,dest,nbBitsSrc,src) PUSH(nbBits,dest);PUSH(nbBitsSrc,src);POP(nbBits,dest);POP(nbBits,dest) //TODO
+#define XCHG(nbBits,dest,nbBitsSrc,src) XCHG(dest,src) //TODO
 
 // MOVSx (DF FLAG not implemented)
-#define MOVS(a,ecx) src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
+#define MOVSS(a,ecx) src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
 	if (labs(((char *)dest)-((char *)src))<=a) { \
 		for(i=0; i<ecx; i++) {  \
 			src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
@@ -246,6 +246,10 @@ typedef union registry16Bits
 	} else { \
 		memmove(dest,src,a*ecx); m.edi.dd.val+=a*ecx; m.esi.dd.val+=a*ecx; \
 	}
+
+
+#define MOVS(nbBits,dest,nbBitsSrc,src)  \
+                        memmove(dest,src,nbBits/8); dest+=nbBits/8; src+=nbBits/8; } \
 
 #define CMPS(a,ecx) \
 	for(size_t i=0; i<ecx; i++) {  \
@@ -260,14 +264,15 @@ typedef union registry16Bits
 #define CWD m.edx.dw.val = m.eax.dw.val & (1 << 15)?-1:0
 #define CWDE m.eax.dw.v0 = m.eax.dw.val & (1 << 15)?-1:0
 
-#define MOVSB MOVS(1,1)
-#define MOVSW MOVS(2,1)
-#define MOVSD MOVS(4,1)
+#define MOVSB MOVSS(1,1)
+#define MOVSW MOVSS(2,1)
+#define MOVSD MOVSS(4,1)
 
-#define REP_MOVS(b) MOVS(b,m.ecx.dd.val)
-#define REP_MOVSB REP_MOVS(1)
-#define REP_MOVSW REP_MOVS(2)
-#define REP_MOVSD REP_MOVS(4)
+#define REP_MOVSS(b) MOVSS(b,m.ecx.dd.val)
+#define REP_MOVS(nbBits,dest,nbBitsSrc,src) for(i=0; i<m.ecx.dd.val;i++) {MOVS(nbBits,dest,nbBitsSrc,src)}
+#define REP_MOVSB REP_MOVSS(1)
+#define REP_MOVSW REP_MOVSS(2)
+#define REP_MOVSD REP_MOVSS(4)
 
 #define STOS(a,b) memcpy (realAddress(m.edi.dd.val,es), ((db *)&m.eax.dd.val)+b, a); m.edi.dd.val+=a
 
