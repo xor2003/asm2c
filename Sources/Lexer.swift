@@ -20,6 +20,7 @@ public enum Token {
     case Instruction1(String)
     case Instruction2(String)
     case Instruction3(String)
+    case Imul(String)
     case JumpInstruction(String)
     case Number(Int)
     case Operator(String)
@@ -64,10 +65,11 @@ let tokenList: [(String, TokenGenerator, Int)] = [
     ("ah|bh|ch|dh", { .Register8h($0) }, 0),
     ("al|bl|cl|dl", { .Register8l($0) }, 0),
     ("scasb|cmpsb|cmpsw|cmpsd|movsb|movsw|movsd|xlat|lodsb|lodsw|lodsd|stosb|stosw|stosd|aad|repne|repe|rep|std|stc|cld|clc|cli|cbw|cwde|cwd|sti|cmc|pushf|popf|nop|pushad|popad|popa|pusha", { .Instruction0($0) }, 0),
-    ("dec|inc|pop|push|int|neg|div|idiv|mul|imul|setb|setnz|setz|not|lods", { .Instruction1($0) }, 0),
+    ("imul", { .Imul($0) }, 0),
+    ("dec|inc|pop|push|int|neg|div|idiv|mul|setb|setnz|setz|not|lods", { .Instruction1($0) }, 0),
     ("jecxz|jcxz|je|jne|jmp|jnz|jna|jz|loope|loop|ja|jbe|jnbe|jb|jc|jnae|js|jns|jnb|jae|jnc|jge|jg|jle|jl", { .JumpInstruction($0) }, 0),
     ("xchg|cmp|movsx|movzx|mov|or|xor|and|add|adc|sbb|rol|ror|sub|shl|shr|test|in|out|lea|lds|les|lfs|lgs|sar|btr|bts|btc|bt|movs", { .Instruction2($0) }, 0),
-    ("imul|shrd", { .Instruction3($0) }, 0),
+    ("shrd", { .Instruction3($0) }, 0),
     ("\\+|\\*|-|/", { .Operator($0) }, 0),
     ("\'.\'", { (r: String) in
         let index = r.index(r.startIndex, offsetBy: 1)

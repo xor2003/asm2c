@@ -77,7 +77,7 @@ enum Errors: Error {
 class Parser {
     let defaultSelector: String = "ds"
     var labelsnoCase = true
-    let tokens: [(Token,Int, String)]
+    var tokens: [(Token,Int, String)]
     var equ = [equNode]()
     var errorNumber = 0
     var index = 0
@@ -683,12 +683,50 @@ class Parser {
         return Instruction3Node(instruction: instruction.uppercased(), sizeDirectiveSource: currentSizeDirectiveSource, sizeDirectiveDest: currentSizeDirectiveDest, selector: currentSelector, lhs: lhs, rhs: rhs, number: number)
     }
 
+    func parseImul() throws -> Any {
+        //self.currentSelector = defaultSelector
+        let currentLine = currentLineNumber()
+        var i = index
+	var ii = 1
+
+        while (i < tokens.count && currentLine == tokens[i].1) {
+          //  print("parseDataPrimaryExpression found:\(peekCurrentToken())")
+            switch tokens[i].0 {
+	    case .Comma:
+		    ii = ii + 1
+	    default:
+		    ii = ii + 0
+            }
+	    i = i + 1
+        }
+
+	var tokenNumber = ii
+//        print("Imul :\(tokenNumber)\n")
+        switch tokenNumber {
+        case 1:
+//	        print("1\n")
+	    tokens[index].0 = .Instruction1("imul1")
+            return try parseInstruction1()
+        case 2:
+//	        print("2\n")
+	    tokens[index].0 = .Instruction2("imul2")
+            return try parseInstruction2()
+        case 3:
+//	        print("3\n")
+	    tokens[index].0 = .Instruction3("imul3")
+            return try parseInstruction3()
+        default:
+            throw Errors.UnexpectedToken2(peekCurrentToken())
+        }
+    }
 
     func parseLine() throws -> Any {
         self.currentSelector = defaultSelector
         switch peekCurrentToken() {
         case .Instruction0:
             return try parseInstruction0()
+        case .Imul:
+            return try parseImul()
         case .Instruction1:
             return try parseInstruction1()
         case .Instruction2:
