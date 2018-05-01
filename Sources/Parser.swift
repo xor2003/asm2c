@@ -544,6 +544,8 @@ class Parser {
         }
         var currentSizeDirective = getCurrentSizeDirective()
 
+//        print("1 currentSizeDirective:\(currentSizeDirective)\n")
+
         guard let expr = try parseExpression() else {
             throw Errors.UnexpectedToken
         }
@@ -552,6 +554,8 @@ class Parser {
             let currentSizeDirectiveFromExpr: SizeDirective = try getCurrentSizeFrom(expr: expr)
             currentSizeDirective = currentSizeDirectiveFromExpr
         }
+
+//        print("2 currentSizeDirective:\(currentSizeDirective)\n")
 
         return Instruction1Node(instruction: instruction.uppercased(), sizeDirective: currentSizeDirective, selector: currentSelector, operand: expr)
     }
@@ -573,6 +577,8 @@ class Parser {
         var currentSizeDirectiveDest = getCurrentSizeDirective()
         var currentSizeDirectiveSource: SizeDirective = .unknown
 
+//        print("1 currentSizeDirectiveSource:\(currentSizeDirectiveSource) currentSizeDirectiveDest:\(currentSizeDirectiveDest)\n")
+
         guard let lhs = try parseExpression() else {
             throw Errors.ExpectedExpression
         }
@@ -613,10 +619,14 @@ class Parser {
 
         if (isInstructionWithDifferentSizeForSourceAndDestination(instruction: instruction) == true) {
             if (currentSizeDirectiveDest == currentSizeDirectiveSource) {
-                print("Warning:\(instruction) dest and source size marked as egals, please fix your asm code with a byte ptr or word ptr thing???\n")
+	        let currentLine = currentLineNumber()
+                print("Warning:\(currentLine) \(instruction) dest and source size marked as egals, please fix your asm code with a byte ptr or word ptr thing???\n")
                 // TOFIX: Test on DOSBOX if should fail
             }
         }
+
+//        print("2 currentSizeDirectiveSource:\(currentSizeDirectiveSource) currentSizeDirectiveDest:\(currentSizeDirectiveDest)\n")
+
         return Instruction2Node(instruction: instruction.uppercased(), sizeDirectiveSource: currentSizeDirectiveSource, sizeDirectiveDest: currentSizeDirectiveDest, selector: currentSelector, lhs: lhs, rhs: rhs)
     }
 
@@ -627,6 +637,8 @@ class Parser {
         var currentSizeDirectiveDest = getCurrentSizeDirective()
         var currentSizeDirectiveSource: SizeDirective = .unknown
 
+//        print("1 currentSizeDirectiveSource:\(currentSizeDirectiveSource) currentSizeDirectiveDest:\(currentSizeDirectiveDest)\n")
+
         guard let lhs = try parseExpression() else {
             throw Errors.ExpectedExpression
         }
@@ -665,13 +677,6 @@ class Parser {
             currentSizeDirectiveDest = currentSizeDirectiveSource
         }
 
-        if (isInstructionWithDifferentSizeForSourceAndDestination(instruction: instruction) == true) {
-            if (currentSizeDirectiveDest == currentSizeDirectiveSource) {
-                print("Warning:\(instruction) dest and source size marked as egals, please fix your asm code with a byte ptr or word ptr thing???\n")
-                // TOFIX: Test on DOSBOX if should fail
-            }
-        }
-
         guard case Token.Comma = popCurrentToken() else {
             throw Errors.UnexpectedToken
         }
@@ -679,6 +684,8 @@ class Parser {
         guard var number = try parseExpression() else {
             throw Errors.ExpectedExpression
         }
+
+//        print("2 currentSizeDirectiveSource:\(currentSizeDirectiveSource) currentSizeDirectiveDest:\(currentSizeDirectiveDest)\n")
 
         return Instruction3Node(instruction: instruction.uppercased(), sizeDirectiveSource: currentSizeDirectiveSource, sizeDirectiveDest: currentSizeDirectiveDest, selector: currentSelector, lhs: lhs, rhs: rhs, number: number)
     }
@@ -826,6 +833,7 @@ class Parser {
         while index < tokens.count {
             let lineNumber = currentLineNumber()
                 do {
+//	            printLine(number:lineNumber) //x0r
                     switch peekCurrentToken() {
                     case .DataSymbol:
                         dummyIndex = dummyIndex + 1
@@ -869,6 +877,7 @@ class Parser {
                     _ = popCurrentToken()
                     break;
                 }
+//                printLine(number:lineNumber) //x0r
                 let node = try parseLine()
                 if let node = node as? equNode {
                     equ.append(node)
@@ -895,6 +904,7 @@ class Parser {
         while index < tokens.count {
             let lineNumber = currentLineNumber()
             do {
+//                printLine(number:lineNumber) //x0r
                 let node = try parseLine()
 
                 if let node = node as? equNode {

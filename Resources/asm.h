@@ -235,7 +235,10 @@ typedef union registry16Bits
 // LEA - Load Effective Address
 #define LEA(nbBits,dest,nbBitsSrc,src) dest = src
 
-#define XCHG(nbBits,dest,nbBitsSrc,src) XCHG(dest,src) //TODO
+#define XCHG(nbBits,dest,nbBitsSrc,src) XCHG##nbBits (dest,src)
+#define XCHG8(dest,src) {db a = dest; dest = src; src = a;}
+#define XCHG16(dest,src) {dw a = dest; dest = src; src = a;}
+#define XCHG32(dest,src) {dd a = dest; dest = src; src = a;}
 
 // MOVSx (DF FLAG not implemented)
 #define MOVSS(a,ecx) src=realAddress(m.esi.dd.val,ds); dest=realAddress(m.edi.dd.val,es); \
@@ -257,6 +260,11 @@ typedef union registry16Bits
 			AFFECT_ZF( (*(char*)dest-*(char*)src) ); m.edi.dd.val+=a; m.esi.dd.val+=a; \
 			if (!m.ZF) break; \
 	}
+
+#define DIV(a,reg) DIV##a (reg)
+#define DIV8(reg) {db a = m.eax.dw.val / reg;db b = m.eax.dw.val % reg; m.eax.dbl.val = a; m.eax.dbh.val = b;}
+#define DIV16(reg) {dw a = (m.edx.dw.val << 16 + m.eax.dw.val) / reg;dw b = (m.edx.dw.val << 16 + m.eax.dw.val) % reg; m.eax.dw.val = a; m.edx.dw.val = b;}
+#define DIV32(reg) {dd a = ((uint64_t)m.edx.dd.val << 32 + m.eax.dd.val) / reg;dd b = ((uint64_t)m.edx.dd.val << 32 + m.eax.dd.val) % reg; m.eax.dd.val = a; m.edx.dd.val = b;}
 
 #define REPE_CMPS(b) CMPS(b,m.ecx.dd.val)
 #define REPE_CMPSB REPE_CMPS(1)

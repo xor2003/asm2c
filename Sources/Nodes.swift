@@ -316,6 +316,9 @@ public struct Instruction2Node: CustomStringConvertible {
                 castRhs = "(\(sizeDirectiveSource))\(rhs)"
             }
         }
+        if instruction == "XCHG" {
+                castRhs = "\(rhs)"
+        }
         return "R(\(instruction)(\(sizeDirectiveDest.nbBits),\(castLhs),\(sizeDirectiveSource.nbBits),\(castRhs)));\n"
     }
 }
